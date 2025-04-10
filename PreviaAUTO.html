@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Rendimento</title>
+  <style>
+    /* ===== RESET BÁSICO ===== */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: #f7f7f7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    /* ===== TOPO / CABEÇALHO ===== */
+    header {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 15px;
+      position: relative;
+    }
+    #menuToggleBtn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: #2980b9;
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      z-index: 1001;
+    }
+    #menuToggleBtn:hover {
+      background-color: #3498db;
+    }
+    h1#tituloPrincipal {
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    /* ===== LAYOUT PRINCIPAL ===== */
+    .container {
+      display: flex;
+      flex: 1;
+    }
+    /* ===== MENU LATERAL ===== */
+    #menuLateral {
+      width: 250px;
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      transition: all 0.3s ease;
+      overflow-y: auto;
+      position: relative;
+    }
+    #menuLateral.fechado {
+      margin-left: -250px;
+    }
+    #menuLateral h2 {
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    #menuLateral label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    #menuLateral input[type="number"],
+    #menuLateral input[type="text"] {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+      border: none;
+      border-radius: 4px;
+    }
+    #menuLateral hr {
+      margin: 15px 0;
+      border: 0; 
+      height: 1px;
+      background: #7f8c8d;
+    }
+    #menuLateral button {
+      padding: 6px 10px;
+      background-color: #2980b9;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #menuLateral button:hover {
+      background-color: #3498db;
+    }
+    /* ===== CONTEÚDO PRINCIPAL ===== */
+    #conteudo {
+      flex: 1;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+    .section-block {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.2);
+    }
+    .section-block h2 {
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .field-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .field-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .field-group input[type="number"],
+    .field-group input[type="text"] {
+      width: 100%;
+      max-width: 150px;
+      padding: 7px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    select {
+      padding: 7px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      min-width: 180px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px 10px 0 0;
+      background-color: #2980b9;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+    .result-box {
+      margin-top: 10px;
+      background: #ecf0f1;
+      padding: 10px;
+      border-radius: 4px;
+      min-height: 20px;
+    }
+    /* ===== CAIXA PARA MOSTRAR A "QUEBRA" DA ASA OU FILÉ EM SUBITENS ===== */
+    #breakdownBox {
+      margin-top: 10px;
+      background: #f9f9f9;
+      padding: 10px;
+      border: 1px dashed #ccc;
+    }
+    #breakdownBox h4 {
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+    #breakdownBox p {
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+    /* ===== TABELA RELATÓRIO GERAL ===== */
+    #tabelaRelatorio {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    #tabelaRelatorio caption {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #tabelaRelatorio th, #tabelaRelatorio td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    #tabelaRelatorio th {
+      background: #eaeaea;
+    }
+    /* ===== POPUP ===== */
+    .popup-overlay {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100vw; 
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .popup-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 300px;
+      width: 90%;
+      text-align: center;
+    }
+    .popup-content h3 {
+      margin-bottom: 15px;
+    }
+    .popup-content button {
+      margin-top: 10px;
+    }
+    /* ===== RODAPÉ / MARCA D'ÁGUA ===== */
+    footer {
+      text-align: right;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      opacity: 0.5;
+    }
+    /* ===== RESPONSIVIDADE ===== */
+    @media(max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      #conteudo {
+        margin-left: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Bibliotecas para PDF (opcional). Usando jsPDF via CDN. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+          integrity="sha512-NaPGXKjcS1sfcbLN82pJAac1OkZ1LDTcWrE8d+SAeEo1vLf+n23iLuvxnATgHUopgh1JI3imqtW7Il3qDHwhpw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- CABEÇALHO -->
+  <header>
+    <button id="menuToggleBtn" onclick="toggleMenu()">Ocultar Menu</button>
+    <h1 id="tituloPrincipal">Calculadora de Rendimento</h1>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL (menu lateral + conteúdo) -->
+  <div class="container">
+
+    <!-- MENU LATERAL (editável) -->
+    <div id="menuLateral">
+      <h2>Metas (Editáveis)</h2>
+
+      <label for="metaCoxinhaAsa">Coxinha da Asa (%)</label>
+      <input type="number" id="metaCoxinhaAsa" step="0.001" value="4.600"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaMeioAsa">Meio da Asa (%)</label>
+      <input type="number" id="metaMeioAsa" step="0.001" value="2.800"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaPontaAsa">Ponta da Asa (%)</label>
+      <input type="number" id="metaPontaAsa" step="0.001" value="0.930"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+      <!-- Soma das 3 acima ~ 8.33% (Asa Total) -->
+
+      <hr/>
+
+      <label for="metaCoxaSobre">Coxa+Sobrecoxa (LEG) (%)</label>
+      <input type="number" id="metaCoxaSobre" step="0.001" value="26.500"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaFile">Filé (%)</label>
+      <input type="number" id="metaFile" step="0.001" value="26.500"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <hr/>
+
+      <label for="metaFigado">Fígado (%)</label>
+      <input type="number" id="metaFigado" step="0.001" value="1.600"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaMoela">Moela (%)</label>
+      <input type="number" id="metaMoela" step="0.001" value="1.100"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaCoracao">Coração (%)</label>
+      <input type="number" id="metaCoracao" step="0.001" value="0.480"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaPes">Pés (%)</label>
+      <input type="number" id="metaPes" step="0.001" value="2.850"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <hr/>
+
+      <label for="metaCMS">CMS (%)</label>
+      <input type="number" id="metaCMS" step="0.001" value="15.000"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaDorso">Dorso (%)</label>
+      <input type="number" id="metaDorso" step="0.001" value="16.020"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <label for="metaSambiquira">Sambiquira (%)</label>
+      <input type="number" id="metaSambiquira" step="0.001" value="0.800"
+             onfocus="storeOldValue(this)" onblur="checarSenha(this)"/>
+
+      <hr/>
+
+      <!-- Botão para adicionar novos itens (exemplo básico) -->
+      <label for="novoItem">Novo Item</label>
+      <input type="text" id="novoItem" placeholder="Nome item"/>
+      <input type="number" id="novoItemMeta" step="0.001" placeholder="Meta (%)"/>
+      <button onclick="adicionarNovoItem()">Adicionar</button>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div id="conteudo">
+      
+      <!-- Nova seção para inserir porcentagens em massa -->
+      <div class="section-block">
+        <h2>Inserir Porcentagens em Massa</h2>
+        <textarea id="bulkPercentages" placeholder="Cole as porcentagens em ordem: Coxa+Sobrecoxa, Filé, Coxinha da Asa, Meio da Asa, Ponta da Asa, Fígado, Moela, Coração, Pés, CMS, Dorso" style="width:100%; height:80px;"></textarea>
+        <button onclick="processarPorcentagensEmMassa()">Inserir Porcentagens</button>
+      </div>
+      
+      <!-- Seção para escolher qual item queremos calcular -->
+      <div class="section-block">
+        <h2>Selecione o Item para Calcular</h2>
+        <select id="itemSelector" onchange="onSelectItem()">
+          <option value="">-- Escolher --</option>
+          <option value="Asa">Asa</option>
+          <option value="CoxaSobre">Coxa + Sobrecoxa (LEG)</option>
+          <option value="File">Filé</option>
+          <option value="Figado">Fígado</option>
+          <option value="Moela">Moela</option>
+          <option value="Coracao">Coração</option>
+          <option value="Pes">Pés</option>
+          <option value="CMS">CMS</option>
+          <option value="Dorso">Dorso</option>
+          <option value="Sambiquira">Sambiquira</option>
+          <!-- Itens dinâmicos adicionados aparecerão também via JavaScript -->
+        </select>
+      </div>
+
+      <!-- Formulário para ASA -->
+      <div class="section-block" id="formAsa" style="display: none;">
+        <h2>Cálculo - Asa</h2>
+        <p>A soma das metas de Coxinha + Meio + Ponta = ~8.33% (Meta total da Asa).</p>
+        <p>Insira os valores REAIS (em %) de cada parte da Asa:</p>
+        <div class="field-group">
+          <div>
+            <label>Coxinha da Asa (real %)</label>
+            <input type="number" step="0.001" id="realCoxinhaAsa" placeholder="Ex: 4.000" />
+          </div>
+          <div>
+            <label>Meio da Asa (real %)</label>
+            <input type="number" step="0.001" id="realMeioAsa" placeholder="Ex: 2.500" />
+          </div>
+          <div>
+            <label>Ponta da Asa (real %)</label>
+            <input type="number" step="0.001" id="realPontaAsa" placeholder="Ex: 0.900" />
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Asa')">Calcular Diferença (Asa)</button>
+        <div class="result-box" id="resultadoAsaDif"></div>
+      </div>
+
+      <!-- Formulário para FILÉ -->
+      <div class="section-block" id="formFile" style="display: none;">
+        <h2>Cálculo - Filé</h2>
+        <p>Insira o valor REAL (em %) do Filé:</p>
+        <div class="field-group">
+          <div>
+            <label>Filé (real %)</label>
+            <input type="number" step="0.001" id="realFile" placeholder="Ex: 25.000"/>
+          </div>
+        </div>
+        <!-- Incluir Sassami? (opcional) -->
+        <p>Incluir Sassami no cálculo do Filé?</p>
+        <label>
+          <input type="checkbox" id="checkSassami" onchange="toggleSassamiForm()"/>
+          Sim, incluir Sassami
+        </label>
+        <!-- Campos do Sassami (visíveis somente se checkbox ativo) -->
+        <div id="sassamiFields" style="display: none;">
+          <div class="field-group">
+            <div>
+              <label>Número de caixas (Sassami)</label>
+              <input type="number" id="caixasSassami" placeholder="Ex: 10"/>
+            </div>
+            <div>
+              <label>Peso de cada caixa (kg)</label>
+              <input type="number" id="pesoCaixaSassami" placeholder="Ex: 20"/>
+            </div>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('File')">Calcular Diferença (Filé)</button>
+        <div class="result-box" id="resultadoFileDif"></div>
+      </div>
+
+      <!-- Formulário para Coxa + Sobrecoxa -->
+      <div class="section-block" id="formCoxaSobre" style="display: none;">
+        <h2>Cálculo - Coxa + Sobrecoxa (LEG)</h2>
+        <p>Insira o valor REAL (em %) de Coxa+Sobrecoxa:</p>
+        <div class="field-group">
+          <div>
+            <label>Coxa + Sobrecoxa (real %)</label>
+            <input type="number" step="0.001" id="realCoxaSobre" placeholder="Ex: 25.000"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('CoxaSobre')">Calcular Diferença (Coxa+Sobre)</button>
+        <div class="result-box" id="resultadoCoxaSobreDif"></div>
+      </div>
+
+      <!-- Formulário para Fígado -->
+      <div class="section-block" id="formFigado" style="display: none;">
+        <h2>Cálculo - Fígado</h2>
+        <p>Insira o valor REAL (em %) de Fígado:</p>
+        <div class="field-group">
+          <div>
+            <label>Fígado (real %)</label>
+            <input type="number" step="0.001" id="realFigado" placeholder="Ex: 1.300"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Figado')">Calcular Diferença (Fígado)</button>
+        <div class="result-box" id="resultadoFigadoDif"></div>
+      </div>
+
+      <!-- Formulário para Moela -->
+      <div class="section-block" id="formMoela" style="display: none;">
+        <h2>Cálculo - Moela</h2>
+        <p>Insira o valor REAL (em %) de Moela:</p>
+        <div class="field-group">
+          <div>
+            <label>Moela (real %)</label>
+            <input type="number" step="0.001" id="realMoela" placeholder="Ex: 1.000"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Moela')">Calcular Diferença (Moela)</button>
+        <div class="result-box" id="resultadoMoelaDif"></div>
+      </div>
+
+      <!-- Formulário para Coração -->
+      <div class="section-block" id="formCoracao" style="display: none;">
+        <h2>Cálculo - Coração</h2>
+        <p>Insira o valor REAL (em %) de Coração:</p>
+        <div class="field-group">
+          <div>
+            <label>Coração (real %)</label>
+            <input type="number" step="0.001" id="realCoracao" placeholder="Ex: 0.400"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Coracao')">Calcular Diferença (Coração)</button>
+        <div class="result-box" id="resultadoCoracaoDif"></div>
+      </div>
+
+      <!-- Formulário para Pés -->
+      <div class="section-block" id="formPes" style="display: none;">
+        <h2>Cálculo - Pés</h2>
+        <p>Insira o valor REAL (em %) de Pés:</p>
+        <div class="field-group">
+          <div>
+            <label>Pés (real %)</label>
+            <input type="number" step="0.001" id="realPes" placeholder="Ex: 2.500"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Pes')">Calcular Diferença (Pés)</button>
+        <div class="result-box" id="resultadoPesDif"></div>
+      </div>
+
+      <!-- Formulário para CMS -->
+      <div class="section-block" id="formCMS" style="display: none;">
+        <h2>Cálculo - CMS</h2>
+        <p>Insira o valor REAL (em %) de CMS:</p>
+        <div class="field-group">
+          <div>
+            <label>CMS (real %)</label>
+            <input type="number" step="0.001" id="realCMS" placeholder="Ex: 14.500"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('CMS')">Calcular Diferença (CMS)</button>
+        <div class="result-box" id="resultadoCMSDif"></div>
+      </div>
+
+      <!-- Formulário para Dorso -->
+      <div class="section-block" id="formDorso" style="display: none;">
+        <h2>Cálculo - Dorso</h2>
+        <p>Insira o valor REAL (em %) de Dorso:</p>
+        <div class="field-group">
+          <div>
+            <label>Dorso (real %)</label>
+            <input type="number" step="0.001" id="realDorso" placeholder="Ex: 15.500"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Dorso')">Calcular Diferença (Dorso)</button>
+        <div class="result-box" id="resultadoDorsoDif"></div>
+      </div>
+
+      <!-- Formulário para Sambiquira -->
+      <div class="section-block" id="formSambiquira" style="display: none;">
+        <h2>Cálculo - Sambiquira</h2>
+        <p>Insira o valor REAL (em %) de Sambiquira:</p>
+        <div class="field-group">
+          <div>
+            <label>Sambiquira (real %)</label>
+            <input type="number" step="0.001" id="realSambiquira" placeholder="Ex: 0.700"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Sambiquira')">Calcular Diferença (Sambiquira)</button>
+        <div class="result-box" id="resultadoSambiquiraDif"></div>
+      </div>
+
+      <!-- Formulário DINÂMICO p/ itens criados via "Adicionar Novo Item" -->
+      <div class="section-block" id="formDinamico" style="display: none;">
+        <h2 id="tituloFormDinamico">Cálculo - [Item Dinâmico]</h2>
+        <p>Insira o valor REAL (em %) deste novo item:</p>
+        <div class="field-group">
+          <div>
+            <label id="labelFormDinamico">Real (%)</label>
+            <input type="number" step="0.001" id="realItemDinamico" placeholder="Ex: 1.000"/>
+          </div>
+        </div>
+        <button onclick="calcularDiferenca('Dinamico')">Calcular Diferença</button>
+        <div class="result-box" id="resultadoDinamicoDif"></div>
+      </div>
+
+      <!-- Botões e Resultados Gerais (Tonelada, Caixas, Relatório, etc.) -->
+      <div class="section-block" id="boxAcoesGerais" style="display: none;">
+        <h2>Ações Adicionais</h2>
+        <button onclick="abrirPopupTonelada()">Multiplicar pela Tonelada Abatida</button>
+        <div class="result-box" id="resultadoKilosFaltantes"></div>
+
+        <button onclick="abrirPopupCaixas()">Converter Faltantes em Caixas?</button>
+        <div class="result-box" id="resultadoEmCaixas"></div>
+
+        <!-- Botão para adicionar produtos parados (ao cálculo já feito) -->
+        <button id="btnAdicProducao" style="display:none;" onclick="adicionarProducaoParada()">
+          Adicionar Produção Parada
+        </button>
+        <div class="result-box" id="resultAdicaoProducao"></div>
+
+        <!-- Caixa extra para mostrar a “quebra” entre subitens de Asa ou Filé+Sassami -->
+        <div id="breakdownBox" style="display: none;"></div>
+
+        <button onclick="gerarRelatorio()">Gerar Relatório (Item Atual)</button>
+        <div class="result-box" id="relatorioFinal"></div>
+
+        <br/>
+        <button onclick="salvarCalculo()">Salvar este Cálculo</button>
+      </div>
+
+      <!-- Seção para Relatório Geral -->
+      <div class="section-block">
+        <h2>Relatório Geral (Itens Salvos)</h2>
+        <button onclick="exibirRelatorioGeral()">Exibir Relatório Geral</button>
+        <button onclick="gerarPDF()">Gerar PDF</button>
+        <button onclick="resetarTudo()">Resetar Tudo</button>
+        <div id="relatorioGeral" class="result-box"></div>
+      </div>
+
+    </div><!-- /conteudo -->
+  </div><!-- /container -->
+
+  <!-- POPUP Toneladas -->
+  <div class="popup-overlay" id="popupToneladas">
+    <div class="popup-content">
+      <h3>Toneladas Abatidas</h3>
+      <p>Digite em kg, por ex: 30000 (30 toneladas).</p>
+      <input type="number" id="inputToneladas" placeholder="Ex: 30000"/>
+      <button onclick="confirmarToneladas()">OK</button>
+      <button onclick="fecharPopupTonelada()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- POPUP Caixas -->
+  <div class="popup-overlay" id="popupCaixas">
+    <div class="popup-content">
+      <h3>Peso da Caixa (kg)</h3>
+      <p>Digite o peso de 1 caixa (ex: 15 kg)</p>
+      <input type="number" id="inputPesoCaixa" placeholder="Ex: 15"/>
+      <button onclick="confirmarCaixas()">Calcular</button>
+      <button onclick="fecharPopupCaixas()">Cancelar</button>
+    </div>
+  </div>
+
+  <footer>
+    Criado por Adriano Almeida
+  </footer>
+
+  <script>
+    // =================== OBJETO DE METAS ===================
+    let metas = {
+      coxinhaAsa: 4.600,
+      meioAsa: 2.800,
+      pontaAsa: 0.930,
+
+      coxaSobre: 26.500,
+      file: 26.500,
+
+      figado: 1.600,
+      moela: 1.100,
+      coracao: 0.480,
+      pes: 2.850,
+
+      cms: 15.000,
+      dorso: 16.020,
+      sambiquira: 0.800
+      // novos itens poderão ser inseridos dinamicamente
+    };
+
+    // =================== DICIONÁRIO DE SETORES ===================
+    const setores = {
+      "Asa": "Sala de Cortes",
+      "CoxaSobre": "Sala de Cortes",
+      "File": "Sala de Cortes",
+      "Figado": "Miúdos",
+      "Moela": "Miúdos",
+      "Coracao": "Miúdos",
+      "Pes": "Miúdos",
+      "CMS": "Outros",
+      "Dorso": "Outros",
+      "Sambiquira": "Outros"
+      // Para itens novos, definimos "Outros" por padrão
+    };
+
+    // =================== VARIÁVEIS GLOBAIS DE CÁLCULO ====================
+    let itemAtual = "";
+    let diferencaPercent = 0;    // (Meta - Real), em %
+    let toneladasAbatidas = 0;   // valor em kg
+    let quilosFaltantes = 0;     // calculado = (dif. % / 100) * toneladasAbatidas (ou excesso)
+    let caixasCalculadas = 0;    // quilosFaltantes / pesoCaixa
+
+    // Armazena o último peso da caixa informado, para uso no "adicionarProducaoParada()"
+    let ultimoPesoCaixa = 0;
+
+    // Para guardar detalhes da “quebra” da ASA ou Filé+Sassami
+    let breakdownHTML = ""; // conteúdo que exibiremos no #breakdownBox
+
+    // =================== ARMAZENAMENTO LOCAL (localStorage) ====================
+    let resultadosSalvos = [];
+    const lsData = localStorage.getItem("calculadoraRendimento");
+    if (lsData) {
+      resultadosSalvos = JSON.parse(lsData);
+    }
+
+    // =================== MENU LATERAL: Mostrar/Ocultar =================
+    function toggleMenu() {
+      const menu = document.getElementById('menuLateral');
+      menu.classList.toggle('fechado');
+      const btn = document.getElementById('menuToggleBtn');
+      btn.innerText = menu.classList.contains('fechado') ? 'Mostrar Menu' : 'Ocultar Menu';
+    }
+
+    // ============ BLOQUEAR EDIÇÃO DAS METAS SEM SENHA ============
+    let oldValue = "";
+    function storeOldValue(input) {
+      oldValue = input.value;
+    }
+    function checarSenha(input) {
+      if (input.value != oldValue) {
+        const senha = prompt("Digite a senha para alterar as metas:");
+        if (senha !== "1234") {
+          alert("Senha incorreta. Alteração não permitida.");
+          input.value = oldValue;
+        } else {
+          alert("Meta alterada com sucesso!");
+        }
+      }
+    }
+
+    // Atualiza metas do objeto (quando formos calcular)
+    function atualizarMetas() {
+      metas.coxinhaAsa  = parseFloat(document.getElementById('metaCoxinhaAsa').value)  || 0;
+      metas.meioAsa     = parseFloat(document.getElementById('metaMeioAsa').value)     || 0;
+      metas.pontaAsa    = parseFloat(document.getElementById('metaPontaAsa').value)    || 0;
+
+      metas.coxaSobre   = parseFloat(document.getElementById('metaCoxaSobre').value)   || 0;
+      metas.file        = parseFloat(document.getElementById('metaFile').value)         || 0;
+
+      metas.figado      = parseFloat(document.getElementById('metaFigado').value)      || 0;
+      metas.moela       = parseFloat(document.getElementById('metaMoela').value)       || 0;
+      metas.coracao     = parseFloat(document.getElementById('metaCoracao').value)     || 0;
+      metas.pes         = parseFloat(document.getElementById('metaPes').value)         || 0;
+
+      metas.cms         = parseFloat(document.getElementById('metaCMS').value)         || 0;
+      metas.dorso       = parseFloat(document.getElementById('metaDorso').value)       || 0;
+      metas.sambiquira  = parseFloat(document.getElementById('metaSambiquira').value)  || 0;
+    }
+
+    // Adicionar novo item (dinâmico) ao objeto de metas
+    function adicionarNovoItem() {
+      const nomeItem = document.getElementById('novoItem').value.trim();
+      const valorItem = parseFloat(document.getElementById('novoItemMeta').value) || 0;
+      if (nomeItem) {
+        const senha = prompt("Digite a senha para adicionar novo item:");
+        if (senha !== "1234") {
+          alert("Senha incorreta. Não foi possível adicionar o item.");
+          return;
+        }
+        metas[nomeItem] = valorItem;
+        alert(`Item "${nomeItem}" adicionado com meta de ${valorItem}%`);
+
+        // Adicionar no select
+        const sel = document.getElementById('itemSelector');
+        const opt = document.createElement('option');
+        opt.value = nomeItem;
+        opt.textContent = nomeItem;
+        sel.appendChild(opt);
+
+        // Define setor como "Outros"
+        setores[nomeItem] = "Outros";
+
+        // Limpa campos
+        document.getElementById('novoItem').value = "";
+        document.getElementById('novoItemMeta').value = "";
+      } else {
+        alert("Informe o nome do novo item.");
+      }
+    }
+
+    // =================== Exibir forms conforme seleção ===================
+    function onSelectItem() {
+      // Esconde TODOS os formulários
+      document.getElementById('formAsa').style.display = "none";
+      document.getElementById('formFile').style.display = "none";
+      document.getElementById('formCoxaSobre').style.display = "none";
+      document.getElementById('formFigado').style.display = "none";
+      document.getElementById('formMoela').style.display = "none";
+      document.getElementById('formCoracao').style.display = "none";
+      document.getElementById('formPes').style.display = "none";
+      document.getElementById('formCMS').style.display = "none";
+      document.getElementById('formDorso').style.display = "none";
+      document.getElementById('formSambiquira').style.display = "none";
+      document.getElementById('formDinamico').style.display = "none";
+
+      // Limpar campos de resultado (diferença)
+      document.getElementById('resultadoAsaDif').innerHTML = "";
+      document.getElementById('resultadoFileDif').innerHTML = "";
+      document.getElementById('resultadoCoxaSobreDif').innerHTML = "";
+      document.getElementById('resultadoFigadoDif').innerHTML = "";
+      document.getElementById('resultadoMoelaDif').innerHTML = "";
+      document.getElementById('resultadoCoracaoDif').innerHTML = "";
+      document.getElementById('resultadoPesDif').innerHTML = "";
+      document.getElementById('resultadoCMSDif').innerHTML = "";
+      document.getElementById('resultadoDorsoDif').innerHTML = "";
+      document.getElementById('resultadoSambiquiraDif').innerHTML = "";
+      document.getElementById('resultadoDinamicoDif').innerHTML = "";
+
+      // Limpar resultados gerais
+      document.getElementById('resultadoKilosFaltantes').innerHTML = "";
+      document.getElementById('resultadoEmCaixas').innerHTML = "";
+      document.getElementById('relatorioFinal').innerHTML = "";
+      document.getElementById('breakdownBox').style.display = "none";
+      document.getElementById('breakdownBox').innerHTML = "";
+      document.getElementById('resultAdicaoProducao').innerHTML = "";
+      document.getElementById('btnAdicProducao').style.display = "none";
+
+      // Resetar variáveis globais
+      diferencaPercent = 0;
+      toneladasAbatidas = 0;
+      quilosFaltantes = 0;
+      caixasCalculadas = 0;
+      breakdownHTML = "";
+      ultimoPesoCaixa = 0;
+
+      // Ocultar a box de ações gerais até calcular
+      document.getElementById('boxAcoesGerais').style.display = "none";
+
+      // Verifica qual item foi escolhido
+      itemAtual = document.getElementById('itemSelector').value;
+      if (!itemAtual) return; // se não escolheu nada, sai
+
+      // Mostra o formulário adequado
+      switch (itemAtual) {
+        case "Asa":
+          document.getElementById('formAsa').style.display = "block";
+          break;
+        case "File":
+          document.getElementById('formFile').style.display = "block";
+          break;
+        case "CoxaSobre":
+          document.getElementById('formCoxaSobre').style.display = "block";
+          break;
+        case "Figado":
+          document.getElementById('formFigado').style.display = "block";
+          break;
+        case "Moela":
+          document.getElementById('formMoela').style.display = "block";
+          break;
+        case "Coracao":
+          document.getElementById('formCoracao').style.display = "block";
+          break;
+        case "Pes":
+          document.getElementById('formPes').style.display = "block";
+          break;
+        case "CMS":
+          document.getElementById('formCMS').style.display = "block";
+          break;
+        case "Dorso":
+          document.getElementById('formDorso').style.display = "block";
+          break;
+        case "Sambiquira":
+          document.getElementById('formSambiquira').style.display = "block";
+          break;
+        default:
+          // Se chegou aqui, é um item NOVO (dinâmico)
+          if (metas[itemAtual] !== undefined) {
+            // Mostra o formDinamico
+            document.getElementById('formDinamico').style.display = "block";
+            // Ajusta título e label
+            document.getElementById('tituloFormDinamico').textContent = `Cálculo - ${itemAtual}`;
+            document.getElementById('labelFormDinamico').textContent = `${itemAtual} (real %)`;
+          }
+          break;
+      }
+    }
+
+    // Mostrar/esconder campos do Sassami (Filé)
+    function toggleSassamiForm() {
+      const check = document.getElementById('checkSassami');
+      const divSassami = document.getElementById('sassamiFields');
+      divSassami.style.display = check.checked ? "block" : "none";
+    }
+
+    // =================== CALCULAR DIFERENÇA (META - REAL) ===================
+    function calcularDiferenca(tipo) {
+      // Atualiza metas
+      atualizarMetas();
+
+      // Zera variáveis globais
+      diferencaPercent = 0;
+      toneladasAbatidas = 0;
+      quilosFaltantes = 0;
+      caixasCalculadas = 0;
+      breakdownHTML = "";
+      ultimoPesoCaixa = 0;
+
+      // Exibe a área de ações
+      document.getElementById('boxAcoesGerais').style.display = "block";
+
+      // Verifica o tipo do item e faz o cálculo de (Meta - Real)
+      switch (tipo) {
+        case "Asa": {
+          // Soma metas ASA
+          const somaMetaAsa = metas.coxinhaAsa + metas.meioAsa + metas.pontaAsa; 
+          // Lê os reais
+          const realCoxinha = parseFloat(document.getElementById('realCoxinhaAsa').value) || 0;
+          const realMeio    = parseFloat(document.getElementById('realMeioAsa').value)    || 0;
+          const realPonta   = parseFloat(document.getElementById('realPontaAsa').value)   || 0;
+          // Soma reais
+          const somaRealAsa = realCoxinha + realMeio + realPonta;
+          // Diferença = (metaAsaTotal) - (realAsaTotal)
+          diferencaPercent = somaMetaAsa - somaRealAsa;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoAsaDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoAsaDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Asa";
+          break;
+        }
+
+        case "File": {
+          const realFile = parseFloat(document.getElementById('realFile').value) || 0;
+          const metaFile = metas.file;
+          diferencaPercent = metaFile - realFile;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoFileDif').innerHTML = `
+              <strong>Excesso (Real - Meta c/ Sassami):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+              <br/>
+              <em>(Se incluir Sassami, a dif. final ajusta após inserir tonelada)</em>
+            `;
+          } else {
+            document.getElementById('resultadoFileDif').innerHTML = `
+              <strong>Diferença (Meta - Real c/ Sassami):</strong> ${diferencaPercent.toFixed(3)}%
+              <br/>
+              <em>(Se incluir Sassami, a dif. final ajusta após inserir tonelada)</em>
+            `;
+          }
+          itemAtual = "File";
+          break;
+        }
+
+        case "CoxaSobre": {
+          const realCoxaSobre = parseFloat(document.getElementById('realCoxaSobre').value) || 0;
+          diferencaPercent = metas.coxaSobre - realCoxaSobre;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoCoxaSobreDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoCoxaSobreDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "CoxaSobre";
+          break;
+        }
+
+        case "Figado": {
+          const realFigado = parseFloat(document.getElementById('realFigado').value) || 0;
+          diferencaPercent = metas.figado - realFigado;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoFigadoDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoFigadoDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Figado";
+          break;
+        }
+
+        case "Moela": {
+          const realMoela = parseFloat(document.getElementById('realMoela').value) || 0;
+          diferencaPercent = metas.moela - realMoela;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoMoelaDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoMoelaDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Moela";
+          break;
+        }
+
+        case "Coracao": {
+          const realCoracao = parseFloat(document.getElementById('realCoracao').value) || 0;
+          diferencaPercent = metas.coracao - realCoracao;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoCoracaoDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoCoracaoDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Coracao";
+          break;
+        }
+
+        case "Pes": {
+          const realPes = parseFloat(document.getElementById('realPes').value) || 0;
+          diferencaPercent = metas.pes - realPes;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoPesDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoPesDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Pes";
+          break;
+        }
+
+        case "CMS": {
+          const realCMS = parseFloat(document.getElementById('realCMS').value) || 0;
+          diferencaPercent = metas.cms - realCMS;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoCMSDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoCMSDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "CMS";
+          break;
+        }
+
+        case "Dorso": {
+          const realDorso = parseFloat(document.getElementById('realDorso').value) || 0;
+          diferencaPercent = metas.dorso - realDorso;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoDorsoDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoDorsoDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Dorso";
+          break;
+        }
+
+        case "Sambiquira": {
+          const realSambiquira = parseFloat(document.getElementById('realSambiquira').value) || 0;
+          diferencaPercent = metas.sambiquira - realSambiquira;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoSambiquiraDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoSambiquiraDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          itemAtual = "Sambiquira";
+          break;
+        }
+
+        case "Dinamico": {
+          const realDinamico = parseFloat(document.getElementById('realItemDinamico').value) || 0;
+          diferencaPercent = metas[itemAtual] - realDinamico;
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoDinamicoDif').innerHTML = `
+              <strong>Excesso (Real - Meta):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoDinamicoDif').innerHTML = `
+              <strong>Diferença (Meta - Real):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+          break;
+        }
+
+        default:
+          alert("Item não reconhecido.");
+          return;
+      }
+    }
+
+    // =================== POPUP TONELADAS ====================
+    function abrirPopupTonelada() {
+      if (diferencaPercent === 0) {
+        alert("Primeiro, calcule a diferença (Meta - Real).");
+        return;
+      }
+      document.getElementById('popupToneladas').style.display = "flex";
+    }
+    function fecharPopupTonelada() {
+      document.getElementById('popupToneladas').style.display = "none";
+    }
+    function confirmarToneladas() {
+      toneladasAbatidas = parseFloat(document.getElementById('inputToneladas').value) || 0;
+      fecharPopupTonelada();
+      if (toneladasAbatidas <= 0) {
+        alert("Valor de toneladas inválido.");
+        return;
+      }
+
+      // Se o valor REAL for menor que a meta (diferença positiva)
+      if (diferencaPercent >= 0) {
+        quilosFaltantes = (diferencaPercent / 100) * toneladasAbatidas;
+        document.getElementById('resultadoKilosFaltantes').innerHTML = `
+          <strong>Quilos Faltantes:</strong> ${quilosFaltantes.toFixed(2)} kg
+        `;
+      } else {
+        // Se ultrapassou a meta, calcular o excesso (valor absoluto)
+        quilosFaltantes = (Math.abs(diferencaPercent) / 100) * toneladasAbatidas;
+        document.getElementById('resultadoKilosFaltantes').innerHTML = `
+          <strong>Quilos a mais produzidos:</strong> ${quilosFaltantes.toFixed(2)} kg
+        `;
+      }
+
+      // 2) Se for Filé + Sassami marcado, recalcula a diferença
+      if (itemAtual === "File" && document.getElementById('checkSassami').checked) {
+        const nCaixas = parseFloat(document.getElementById('caixasSassami').value) || 0;
+        const pesoCx = parseFloat(document.getElementById('pesoCaixaSassami').value) || 0;
+        if (nCaixas > 0 && pesoCx > 0) {
+          const totalKgSassami = nCaixas * pesoCx;
+          // Converte Sassami pra % do total abatido
+          const sassamiPorcent = (totalKgSassami / toneladasAbatidas) * 100;
+          // Ajusta a diferença = metaFile - (realFile + sassami%)
+          const metaFile = metas.file;
+          const realFile = parseFloat(document.getElementById('realFile').value) || 0;
+
+          diferencaPercent = metaFile - (realFile + sassamiPorcent);
+          // Recalcula os quilosFaltantes
+          if (diferencaPercent >= 0) {
+            quilosFaltantes = (diferencaPercent / 100) * toneladasAbatidas;
+          } else {
+            quilosFaltantes = (Math.abs(diferencaPercent) / 100) * toneladasAbatidas;
+          }
+
+          // Exibir a nova diferença % atualizada também
+          if (diferencaPercent < 0) {
+            document.getElementById('resultadoFileDif').innerHTML = `
+              <strong>Excesso (Real - Meta c/ Sassami):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%
+            `;
+          } else {
+            document.getElementById('resultadoFileDif').innerHTML = `
+              <strong>Diferença (Meta - Real c/ Sassami):</strong> ${diferencaPercent.toFixed(3)}%
+            `;
+          }
+        }
+      }
+    }
+
+    // =================== POPUP CAIXAS ====================
+    function abrirPopupCaixas() {
+      if (quilosFaltantes === 0 && diferencaPercent !== 0) {
+        alert("Você ainda não multiplicou pela tonelada abatida. (Use o botão 'Multiplicar pela Tonelada Abatida'.)");
+        return;
+      }
+      if (diferencaPercent === 0) {
+        alert("Primeiro calcule a diferença (Meta - Real).");
+        return;
+      }
+      if (toneladasAbatidas === 0) {
+        alert("É preciso informar as toneladas abatidas antes de converter em caixas.");
+        return;
+      }
+      document.getElementById('popupCaixas').style.display = "flex";
+    }
+    function fecharPopupCaixas() {
+      document.getElementById('popupCaixas').style.display = "none";
+    }
+    function confirmarCaixas() {
+      const pesoCaixa = parseFloat(document.getElementById('inputPesoCaixa').value) || 0;
+      fecharPopupCaixas();
+      if (pesoCaixa > 0) {
+        caixasCalculadas = quilosFaltantes / pesoCaixa;
+        ultimoPesoCaixa = pesoCaixa; // salvar para uso na produção parada
+      } else {
+        caixasCalculadas = 0;
+      }
+      // Se o cálculo for de excesso, exibimos "Excesso" ao invés de "Faltantes"
+      if (diferencaPercent < 0) {
+        document.getElementById('resultadoEmCaixas').innerHTML = `
+          <strong>Excesso em caixas:</strong> ${caixasCalculadas.toFixed(2)} caixas (de ${pesoCaixa} kg)
+        `;
+      } else {
+        document.getElementById('resultadoEmCaixas').innerHTML = `
+          <strong>Equivalente a:</strong> ${caixasCalculadas.toFixed(2)} caixas (de ${pesoCaixa} kg)
+        `;
+      }
+
+      // Se calculamos caixas, exibe o botão de "Adicionar Produção Parada"
+      if (caixasCalculadas > 0) {
+        document.getElementById('btnAdicProducao').style.display = "inline-block";
+      }
+
+      // ======================= CRIAR BREAKDOWN (ASA ou FILÉ+Sassami) ===================
+      breakdownHTML = ""; 
+      const box = document.getElementById('breakdownBox');
+      box.innerHTML = "";
+      box.style.display = "none";
+
+      // Se for ASA, vamos dividir o quilosFaltantes entre (Coxinha, Meio, Ponta)
+      if (itemAtual === "Asa" && quilosFaltantes > 0) {
+        const somaMetaAsa = metas.coxinhaAsa + metas.meioAsa + metas.pontaAsa;
+        if (somaMetaAsa > 0) {
+          // Calcula frações:
+          const faltCox  = quilosFaltantes * (metas.coxinhaAsa / somaMetaAsa);
+          const faltMeio = quilosFaltantes * (metas.meioAsa    / somaMetaAsa);
+          const faltPonta= quilosFaltantes * (metas.pontaAsa   / somaMetaAsa);
+
+          // Caixas de cada parte
+          const coxCaixas   = faltCox   / pesoCaixa;
+          const meioCaixas  = faltMeio  / pesoCaixa;
+          const pontaCaixas = faltPonta / pesoCaixa;
+
+          // % do abate
+          const coxPorc    = (faltCox / toneladasAbatidas)*100;
+          const meioPorc   = (faltMeio / toneladasAbatidas)*100;
+          const pontaPorc  = (faltPonta / toneladasAbatidas)*100;
+
+          breakdownHTML += `
+            <h4>Quebra dos Quilos ${diferencaPercent < 0 ? 'Excedentes' : 'Faltantes'} (Asa)</h4>
+            <p><strong>Coxinha da Asa:</strong> ${faltCox.toFixed(2)} kg 
+               → ${coxCaixas.toFixed(2)} caixas 
+               → (${coxPorc.toFixed(3)}% do abate)</p>
+            <p><strong>Meio da Asa:</strong> ${faltMeio.toFixed(2)} kg 
+               → ${meioCaixas.toFixed(2)} caixas
+               → (${meioPorc.toFixed(3)}% do abate)</p>
+            <p><strong>Ponta da Asa:</strong> ${faltPonta.toFixed(2)} kg 
+               → ${pontaCaixas.toFixed(2)} caixas 
+               → (${pontaPorc.toFixed(3)}% do abate)</p>
+          `;
+        }
+      }
+
+      // Se for Filé + Sassami, dividimos o quilosFaltantes entre Filé e Sassami (conforme real%)
+      if (itemAtual === "File" && document.getElementById('checkSassami').checked) {
+        // Precisamos da % real do Filé e a % “real” do Sassami
+        const nCx = parseFloat(document.getElementById('caixasSassami').value) || 0;
+        const pCx = parseFloat(document.getElementById('pesoCaixaSassami').value) || 0;
+        const realFile = parseFloat(document.getElementById('realFile').value) || 0;
+
+        if (nCx>0 && pCx>0 && toneladasAbatidas>0) {
+          const kgSassami = nCx * pCx;
+          const sassamiPorcent = (kgSassami / toneladasAbatidas)*100; 
+          // Soma das “reais” => realFile + sassamiPorcent
+          const somaRealFile = realFile + sassamiPorcent;
+          if (somaRealFile>0) {
+            const faltFileParte = quilosFaltantes * (realFile / somaRealFile);
+            const faltSassParte = quilosFaltantes * (sassamiPorcent / somaRealFile);
+
+            // Caixas de cada parte
+            const fileCx = faltFileParte / pesoCaixa;
+            const sassCx = faltSassParte / pesoCaixa;
+
+            // % do abate
+            const filePorc = (faltFileParte / toneladasAbatidas)*100;
+            const sassPorc = (faltSassParte / toneladasAbatidas)*100;
+
+            breakdownHTML += `
+              <h4>Quebra dos Quilos ${diferencaPercent < 0 ? 'Excedentes' : 'Faltantes'} (Filé + Sassami)</h4>
+              <p><strong>Filé:</strong> ${faltFileParte.toFixed(2)} kg 
+                 → ${fileCx.toFixed(2)} caixas 
+                 → (${filePorc.toFixed(3)}% do abate)</p>
+              <p><strong>Sassami:</strong> ${faltSassParte.toFixed(2)} kg 
+                 → ${sassCx.toFixed(2)} caixas 
+                 → (${sassPorc.toFixed(3)}% do abate)</p>
+            `;
+          }
+        }
+      }
+
+      // Se houver breakdown para exibir, mostra
+      if (breakdownHTML) {
+        const box = document.getElementById('breakdownBox');
+        box.style.display = "block";
+        box.innerHTML = breakdownHTML;
+      }
+    }
+
+    // ================ ADICIONAR PRODUÇÃO PARADA (em quilos) ==================
+    function adicionarProducaoParada() {
+      // Verifica se já foi feito o cálculo das caixas
+      if (caixasCalculadas <= 0 || ultimoPesoCaixa <= 0) {
+        alert("Primeiro converta a quantidade faltante em caixas.");
+        return;
+      }
+
+      // Pergunta se o usuário realmente deseja adicionar
+      const resposta = prompt("Deseja adicionar mais produto parado para esse item? (Digite 'sim' ou 'nao')");
+      if (!resposta || resposta.toLowerCase() !== "sim") {
+        return; // se digitou qualquer coisa que não seja 'sim', não faz nada
+      }
+
+      // Agora pergunta quantos quilos devem ser adicionados
+      const quilosAdicionais = parseFloat(prompt("Quantos quilos desse produto estão parados e devem ser adicionados ao cálculo já feito?"));
+      if (!quilosAdicionais || quilosAdicionais <= 0) {
+        alert("Valor de quilos inválido.");
+        return;
+      }
+
+      // *** PEGAR VALORES ANTIGOS PARA MOSTRAR COMPARAÇÃO *** 
+      const oldQuilosFaltantes = quilosFaltantes;
+      const oldCaixasCalculadas = caixasCalculadas;
+
+      // Converte esses quilos em caixas
+      const caixasAdicionais = quilosAdicionais / ultimoPesoCaixa;
+      // Subtrai do que estava faltando
+      caixasCalculadas -= caixasAdicionais;
+
+      // Se ficar negativo, zera
+      if (caixasCalculadas < 0) {
+        caixasCalculadas = 0;
+      }
+
+      // Atualiza também o quilosFaltantes
+      quilosFaltantes = caixasCalculadas * ultimoPesoCaixa;
+
+      // Mostra o resultado atualizado e o valor anterior
+      document.getElementById('resultadoEmCaixas').innerHTML = `
+        <strong>Equivalente a:</strong> ${caixasCalculadas.toFixed(2)} caixas (de ${ultimoPesoCaixa} kg)
+      `;
+
+      document.getElementById('resultadoKilosFaltantes').innerHTML = `
+        <strong>Quilos ${diferencaPercent < 0 ? 'Excedentes' : 'Faltantes'}:</strong> ${quilosFaltantes.toFixed(2)} kg
+      `;
+
+      document.getElementById('resultAdicaoProducao').innerHTML = `
+        <strong>Valor Anterior:</strong><br/>
+        &nbsp;&nbsp;• ${oldQuilosFaltantes.toFixed(2)} kg &nbsp;(${oldCaixasCalculadas.toFixed(2)} caixas)
+        <br/><br/>
+        <strong>Produção Parada Adicionada:</strong> ${quilosAdicionais.toFixed(2)} kg 
+        <br/>
+        (≈ ${caixasAdicionais.toFixed(2)} caixas removidas da ${diferencaPercent < 0 ? 'excedente' : 'falta'})
+        <br/><br/>
+        <strong>Novo Valor Atualizado:</strong><br/>
+        &nbsp;&nbsp;• ${quilosFaltantes.toFixed(2)} kg &nbsp;(${caixasCalculadas.toFixed(2)} caixas)
+      `;
+    }
+
+    // =================== GERAR RELATÓRIO (Item Atual) ===================
+    function gerarRelatorio() {
+      if (!itemAtual) return;
+
+      let rel = `<h4>Relatório - ${itemAtual}</h4>`;
+      rel += `<p><strong>Setor:</strong> ${setores[itemAtual] || "Outros"}</p>`;
+      // Se o cálculo for de excesso, mostra "Excesso" e o valor absoluto
+      if (diferencaPercent < 0) {
+        rel += `<p><strong>Excesso (%):</strong> ${Math.abs(diferencaPercent).toFixed(3)}%</p>`;
+      } else {
+        rel += `<p><strong>Diferença (%):</strong> ${diferencaPercent.toFixed(3)}%</p>`;
+      }
+      if (toneladasAbatidas > 0) {
+        rel += `<p><strong>Toneladas Abatidas (kg):</strong> ${toneladasAbatidas.toFixed(2)}</p>`;
+        if (diferencaPercent < 0) {
+          rel += `<p><strong>Quilos a Mais (kg):</strong> ${quilosFaltantes.toFixed(2)}</p>`;
+        } else {
+          rel += `<p><strong>Quilos Faltantes (kg):</strong> ${quilosFaltantes.toFixed(2)}</p>`;
+        }
+      }
+      if (caixasCalculadas > 0) {
+        rel += `<p><strong>Caixas ${diferencaPercent < 0 ? 'Excedentes' : 'Faltantes'}:</strong> ${caixasCalculadas.toFixed(2)}</p>`;
+      }
+
+      // Se Filé + Sassami
+      if (itemAtual === "File" && document.getElementById('checkSassami').checked) {
+        const nCx = parseFloat(document.getElementById('caixasSassami').value) || 0;
+        const pCx = parseFloat(document.getElementById('pesoCaixaSassami').value) || 0;
+        if (nCx > 0 && pCx > 0) {
+          const kgSass = nCx * pCx;
+          rel += `<p><strong>Sassami:</strong> ${nCx} caixas (total ${kgSass.toFixed(2)} kg)</p>`;
+        }
+      }
+
+      document.getElementById('relatorioFinal').innerHTML = rel;
+    }
+
+    // =================== SALVAR O CÁLCULO (ITEM ATUAL) ===================
+    function salvarCalculo() {
+      if (!itemAtual) {
+        alert("Nenhum item selecionado para salvar.");
+        return;
+      }
+      // Armazena a situação: se a diferença for >= 0, é "Faltante"; se for negativa, "Excedente"
+      const situacao = diferencaPercent >= 0 ? "Faltante" : "Excedente";
+      const dados = {
+        item: itemAtual,
+        setor: setores[itemAtual] || "Outros",
+        situacao: situacao,
+        // Armazena sempre o valor absoluto da diferença
+        diferencaPercent: Math.abs(diferencaPercent).toFixed(3),
+        toneladas: toneladasAbatidas.toFixed(2),
+        quilosFaltantes: quilosFaltantes.toFixed(2),
+        caixas: caixasCalculadas.toFixed(2)
+      };
+
+      // Se for Filé + Sassami
+      if (itemAtual === "File" && document.getElementById('checkSassami').checked) {
+        dados.sassamiCaixas = (parseFloat(document.getElementById('caixasSassami').value) || 0);
+        dados.sassamiPesoCx = (parseFloat(document.getElementById('pesoCaixaSassami').value) || 0);
+      }
+
+      resultadosSalvos.push(dados);
+      localStorage.setItem("calculadoraRendimento", JSON.stringify(resultadosSalvos));
+      alert(`Cálculo do item "${itemAtual}" foi salvo!`);
+    }
+
+    // =================== EXIBIR RELATÓRIO GERAL ===================
+    function exibirRelatorioGeral() {
+      const container = document.getElementById('relatorioGeral');
+      if (resultadosSalvos.length === 0) {
+        container.innerHTML = "<p>Nenhum cálculo salvo até agora.</p>";
+        return;
+      }
+      // Cria uma tabela com legenda e descrições
+      let html = `
+        <table id="tabelaRelatorio">
+          <caption>Relatório Geral dos Cálculos de Rendimento</caption>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Setor</th>
+              <th>Situação</th>
+              <th>Diferença (%)</th>
+              <th>Toneladas Abatidas (kg)</th>
+              <th>Quilos ${resultadosSalvos[0].situacao === "Excedente" ? "a Mais" : "Faltantes"} (kg)</th>
+              <th>Caixas ${resultadosSalvos[0].situacao === "Excedente" ? "Excedentes" : "Faltantes"}</th>
+              <th>Sassami (opcional)</th>
+            </tr>
+            <tr>
+              <th colspan="8" style="font-size:0.9rem; color:gray;">
+                "Produto": nome do item; "Setor": área responsável; "Situação": indica se o valor real está abaixo (Faltante) ou acima (Excedente) da meta;
+                "Diferença (%)": diferença percentual entre meta e real; "Toneladas Abatidas": total processado;
+                "Quilos" e "Caixas": valores faltantes ou excedentes conforme o caso; "Sassami": detalhes extras para Filé.
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      resultadosSalvos.forEach((calc, i) => {
+        let sassamiExtra = "-";
+        if (calc.item === "File" && calc.sassamiCaixas) {
+          const totalKg = calc.sassamiCaixas * calc.sassamiPesoCx;
+          sassamiExtra = `${calc.sassamiCaixas} cx / total ${totalKg} kg`;
+        }
+        html += `
+          <tr>
+            <td>${calc.item}</td>
+            <td>${calc.setor}</td>
+            <td>${calc.situacao}</td>
+            <td>${calc.diferencaPercent}</td>
+            <td>${calc.toneladas}</td>
+            <td>${calc.quilosFaltantes}</td>
+            <td>${calc.caixas}</td>
+            <td>${sassamiExtra}</td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    // =================== RESETAR TUDO ===================
+    function resetarTudo() {
+      if (!confirm("Tem certeza de que deseja RESETAR todos os cálculos salvos?")) return;
+      resultadosSalvos = [];
+      localStorage.removeItem("calculadoraRendimento");
+      document.getElementById('relatorioGeral').innerHTML = "<p>Resetado com sucesso!</p>";
+    }
+
+    // =================== GERAR PDF (Relatório Geral) ===================
+    async function gerarPDF() {
+      if (resultadosSalvos.length === 0) {
+        alert("Nenhum cálculo salvo para gerar PDF.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(14);
+      doc.text("Relatório Geral - Calculadora de Rendimento", 10, 10);
+
+      let yPos = 20;
+      resultadosSalvos.forEach((calc, i) => {
+        const line = `
+[${i + 1}] Produto: ${calc.item} | Setor: ${calc.setor} | Situação: ${calc.situacao}
+Diferença (%): ${calc.diferencaPercent}%
+Toneladas Abatidas (kg): ${calc.toneladas}
+Quilos ${calc.situacao === "Excedente" ? "a Mais" : "Faltantes"} (kg): ${calc.quilosFaltantes}
+Caixas ${calc.situacao === "Excedente" ? "Excedentes" : "Faltantes"}: ${calc.caixas}
+Sassami: ${
+  calc.sassamiCaixas
+    ? calc.sassamiCaixas + " cx (peso cx: " + calc.sassamiPesoCx + ")"
+    : "N/A"
+}
+----------------------------------------------
+`;
+        const lines = doc.splitTextToSize(line, 180);
+        doc.text(lines, 10, yPos);
+        yPos += lines.length * 6 + 4;
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 10;
+        }
+      });
+
+      doc.save("Relatorio_Geral.pdf");
+    }
+    
+    // =================== FUNÇÃO DE INSERÇÃO DE PORCENTAGENS EM MASSA ===================
+    function processarPorcentagensEmMassa() {
+      let bulkValue = document.getElementById('bulkPercentages').value;
+      if (!bulkValue) {
+        alert("Por favor, insira as porcentagens em massa.");
+        return;
+      }
+      // Extrai todos os números que antecedem o símbolo "%" (caso existam)
+      let matches = bulkValue.match(/[\d.,]+(?=%)/g);
+      // Se não encontrar, tenta separar por quebras de linha ou espaço
+      if (!matches || matches.length < 11) {
+        matches = bulkValue.split(/\s+/).filter(item => item.length > 0);
+        if (matches.length < 11) {
+          alert("Número insuficiente de porcentagens detectadas. Certifique-se de incluir 11 porcentagens na ordem correta.");
+          return;
+        }
+      }
+      // Se houver mais que 11, usa apenas as 11 primeiras
+      if (matches.length > 11) {
+        matches = matches.slice(0, 11);
+      }
+      // Define os IDs dos campos na ordem desejada:
+      // 1. Coxa+Sobrecoxa, 2. Filé, 3. Coxinha da Asa, 4. Meio da Asa, 5. Ponta da Asa,
+      // 6. Fígado, 7. Moela, 8. Coração, 9. Pés, 10. CMS, 11. Dorso
+      const fieldIds = ["realCoxaSobre", "realFile", "realCoxinhaAsa", "realMeioAsa", "realPontaAsa", "realFigado", "realMoela", "realCoracao", "realPes", "realCMS", "realDorso"];
+      for (let i = 0; i < fieldIds.length; i++) {
+        let valueStr = matches[i].replace(",", ".");
+        let valueNum = parseFloat(valueStr);
+        document.getElementById(fieldIds[i]).value = valueNum;
+      }
+      alert("Porcentagens inseridas com sucesso.");
+    }
+  </script>
+</body>
+</html>
